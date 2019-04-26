@@ -28,10 +28,82 @@ Perhatian: Karakter ‘/’ adalah karakter ilegal dalam penamaan file atau fold
 ```
 
 #### Pemahaman Soal 1
+```
+Inti pada soal nomor 1 adalah melakukan dekripsi pada file yang terenkripsi pada direktori asli  
+Jadi file dan folder yang ada di direktori mount akan bisa di baca 
+```
 
 #### Jawaban
-#### Source code
+
 #### Penjelasan
+```c
+void enkrip(char kata[]){
+    if(strcmp(kata, ".") == 0) return;
+    if(strcmp(kata, "..") == 0) return;
+
+    int leng = strlen(kata);
+    for(int i = 0; i < leng; i++)
+    {
+        for(int j = 0; j < 94; j++)
+        {
+            if(kata[i] == cd[j])
+            {
+                kata[i] = cd[(j+KEY)%94];
+                break;
+            }
+        }
+        
+    }
+    
+    printf("%s\n", kata);
+}
+
+void dekrip(char kata[]){
+    if(strcmp(kata, ".") == 0) return;
+    if(strcmp(kata, "..") == 0) return;
+    
+    int leng = strlen(kata);
+    for(int i = 0; i < leng; i++)
+    {
+        for(int j = 0; j < 94; j++)
+        {
+            if(kata[i] == cd[j])
+            {
+                kata[i] = cd[(j+94-KEY)%94];
+                break;
+            }
+        }
+        
+    }
+    
+    printf("%s\n", kata);
+}
+```
+```
+Fungsi untuk melakukan enkripsi dan dekripsi menggunakan Caesar Cipher dengan beberapa modifikasi  
+Akan melakukan return jika string yang masuk adalah . atau ..  
+Langkah awal adalah mencari posisi pada list kode yang digunakan  
+Kemudian nilai pada posisi tersebut akan diganti sesuai dengan KEY
+```
+```c
+char fpath[1000];
+char new[1000];
+if(strcmp(path,"/") == 0)
+{
+    path=dirpath;
+    sprintf(fpath,"%s",path);
+}
+else
+{
+    memcpy(new, path, sizeof(new));
+    enkrip(new);
+    sprintf(fpath, "%s%s", dirpath, new);
+}
+```
+```
+Saat melakukan pemanggilan fungsi read, readdir, dan getattribute maka juga akan memanggil fungsi enkripsi  
+Untuk mengubah path dari file system, agar bisa dioperasi
+```
 
 #### Soal 2
 
@@ -70,10 +142,52 @@ Jika ditemukan file dengan spesifikasi tersebut ketika membuka direktori, Atta a
 ### Pemahaman Soal 3
 
 ```
+Inti pada soal nomor 3 adalah menghapus file dengan kriteria tertentu dan melakukan logging pada file yang telah dihapus
 ```
 
 #### Jawaban 3
-#### Source Code
+#### Penjelasan
+```c
+struct stat izin;
+stat(data, &izin);
+struct group *grup = getgrgid(izin.st_gid);
+struct passwd *nama = getpwuid(izin.st_uid);
+
+int chipset = strcmp(nama->pw_name, "chipset");
+int ic = strcmp(nama->pw_name, "ic_controller");
+int rusak = strcmp(grup->gr_name, "rusak");
+
+int readGrup = izin.st_mode & S_IRGRP;
+int readOther = izin.st_mode & S_IROTH;
+int readUser = izin.st_mode & S_IRUSR;
+
+if((readGrup == 0 || readOther == 0 || readUser == 0) && rusak == 0 && (ic == 0 || chipset == 0))
+```
+```
+Pada saat
+Mengambilkan nilai dari user dan grup, serta file yang hanya bisa diread  
+Kemudian jika memenuhi syarat maka akan menjalankan proses selanjutnya
+```
+```c
+char alamat[1000];
+char miris[] = {"/filemiris.txt"};
+FILE * filem;
+char waktu[1000];
+char buffer[1000];
+
+enkrip(miris);
+memcpy(alamat, dirpath, sizeof(alamat));
+strcat(alamat,miris);
+filem = fopen (alamat, "a+");
+strftime(waktu, 15, "%d %H:%M:%S", localtime(&izin.st_ctime));
+sprintf(buffer, "Nama : %s\tOID : %d\tGID : %d\tWaktu : %s", new, nama->pw_uid, grup->gr_gid, waktu);
+fprintf(filem,"%s\n",buffer);
+remove(data);
+fclose(filem);
+```
+```
+Membuat file untuk menyimpan log, kemudian memasukkan Nama File ID Owner dan ID Group serta waktu terakhir diakses ke dalam file log
+```
 
 ### **Nomor 4**
 
