@@ -7,9 +7,13 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
-#include <sys/stat.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <grp.h>
 #include <pwd.h>
 
@@ -205,22 +209,89 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	int res;
     char fpath[1000];
     char new[1000];
-    if(strcmp(path,"/") == 0)
+	sprintf(new,"%s",path);
+	if(strlen(new)>9 && strncmp(new,"/YOUTUBER",9)==0)
 	{
-		path=dirpath;
-		sprintf(fpath,"%s",path);
+		enkrip(new);
+		sprintf(fpath, "%s%s",dirpath,new);
+		res = mkdir(fpath, 0750);	
 	}
+	else{
+    	enkrip(new);
+		sprintf(fpath, "%s%s",dirpath,new);
+		res = mkdir(fpath, mode);
+		if (res == -1)
+			return -errno;
+	}
+	return 0;
+}
+
+static int xmp_chmod(const char *path, mode_t mode)
+{
+	int res;
+    char fpath[1000];
+    char new[1000];
+    // char cb[1000];
+	sprintf(new,"%s",path);
+	if(strlen(new)>9 && strncmp(new,"/YOUTUBER",9)==0 && strcmp(new+strlen(new)-4,".iz1")==0)
+	{
+		pid_t child1;
+		child1=fork();
+		if(child1==0){
+            // sprintf(cb,"notify-send 'File ekstensi iz1 tidak boleh diubah permissionnya.'");
+            // system(cb);
+			execl("/usr/bin/zenity","/usr/bin/zenity","--error","--text=File ekstensi iz1 tidak boleh diubah permissionnya.","--title=Tidak bisa merubah",NULL);
+		}
+		else{
+			wait(NULL);
+		}
+	}
+	else{
+    	enkrip(new);
+		sprintf(fpath, "%s%s",dirpath,new);
+		res = chmod(fpath, mode);
+	}
+	if (res == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int xmp_chown(const char *path, uid_t uid, gid_t gid)
+{
+	int res;
+    char fpath[1000];
+    char name[1000];
+	sprintf(name,"%s",path);
+    enkrip(name);
+	sprintf(fpath, "%s%s",dirpath,name);
+	res = lchown(fpath, uid, gid);
+	if (res == -1) 
+		return -errno;
+
+	return 0;
+}
+
+static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
+{
+	int res;
+
+	char fpath[1000];
+    char new[1000];
+	sprintf(new,"%s",path);
+    enkrip(new);
+	sprintf(fpath, "%s%s",dirpath,new);
+	if (S_ISREG(mode)) {
+		res = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
+		if (res >= 0)
+			res = close(res);
+	} else if (S_ISFIFO(mode))
+		res = mkfifo(fpath, mode);
 	else
-    {
-        memcpy(new, path, sizeof(new));
-        enkrip(new);
-        sprintf(fpath, "%s%s", dirpath, new);
-    }
-    res = mkdir(fpath, mode);
-    if (res == -1)
-        return -errno;
-    
-    close(res);
+		res = mknod(fpath, mode, rdev);
+	if (res == -1)
+		return -errno;
+
 	return 0;
 }
 
@@ -261,19 +332,20 @@ static int xmp_create(const char* path, mode_t mode, struct fuse_file_info* fi)
     (void) fi;
     char fpath[1000];
     char new[1000];
+	sprintf(new,"%s",path);
     int res;
-	if(strcmp(path,"/") == 0)
+	if(strlen(new)>9 && strncmp(new,"/YOUTUBER",9)==0)
 	{
-		path=dirpath;
-		sprintf(fpath,"%s",path);
+		strcat(new,".iz1");
+		enkrip(new);
+		sprintf(fpath, "%s%s",dirpath,new);
+    	res = creat(fpath, 0640);
 	}
-	else
-    {
-        memcpy(new, path, sizeof(new));
-        enkrip(new);
-        sprintf(fpath, "%s%s", dirpath, new);
-    }
-    res = creat(fpath, mode);
+	else{
+    	enkrip(new);
+		sprintf(fpath, "%s%s",dirpath,new);
+    	res = creat(fpath, mode);
+	}
     if(res == -1)
 	return -errno;
 
@@ -339,6 +411,9 @@ static struct fuse_operations xmp_oper = {
     .create     = xmp_create,
     .utimens    = xmp_utimens,
     .truncate   = xmp_truncate,
+    .chmod		= xmp_chmod,
+    .chown		= xmp_chown,
+    .mknod		= xmp_mknod,
 };
 
 int main(int argc, char *argv[])
