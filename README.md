@@ -147,7 +147,8 @@ Jika ditemukan file dengan spesifikasi tersebut ketika membuka direktori, Atta a
 ### Pemahaman Soal 3
 
 ```
-Inti pada soal nomor 3 adalah menghapus file dengan kriteria tertentu dan melakukan logging pada file yang telah dihapus
+Inti pada soal nomor 3 adalah menghapus file dengan kriteria tertentu  
+dan melakukan logging pada file yang telah dihapus
 ```
 
 #### Jawaban 3
@@ -207,7 +208,8 @@ File berekstensi “.iz1” tidak bisa diubah permissionnya dan memunculkan erro
 ### Pemahaman Soal 4
 
 ```
-Inti pada soal nomor 4 adalah mengubah permission pada folder dan file yang dibuat pada directory YOUTUBER. Kemudian pada saat membuat file maka nama file akan ditambah dengan .iz1, dan file tersebut tidak bisa diubah permissionnya.
+Inti pada soal nomor 4 adalah mengubah permission pada folder dan file yang dibuat pada directory YOUTUBER.  
+Kemudian pada saat membuat file maka nama file akan ditambah dengan .iz1, dan file tersebut tidak bisa diubah permissionnya.
 ```
 
 #### Jawaban 4
